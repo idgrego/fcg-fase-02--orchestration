@@ -1,0 +1,140 @@
+# ===================
+# DICAS
+# 1. utilize o comando "docker compose ps" para realizar um parse no arquivo docker-compose.yml.
+# 2. utilize o comando "docker compose up -d" para ativar todos os containers
+
+services:
+  # broker de mensageria RabbitMQ
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: fcg-rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    ports:
+      - "5672:5672" # porta para protocolo AMQP
+      - "15672:15672" # porta da UI de gerenciamento web
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - fcg-network
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "-q", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 4
+    restart: unless-stopped
+
+  # microsserviço UsersAPI
+  users-api:
+    build:
+      context: ../fcg-fase-02--users
+      dockerfile: Dockerfile
+    container_name: fcg-ms-users-api
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: "Server=tcp:fcg-server.database.windows.net,1433;Initial Catalog=fcg-02-usersdb;Persist Security Info=False;User ID=fcg-sa;Password=f1@p-cluod-gam3s;MultipleActiveResultSets=True;Encrypt=True;TrustServerCertificate=True;Connection Timeout=90;"
+      Jwt__SecretKey: "ChaveSuperSecretaEForteComMaisDe32CaracteresFIAPCloudGames2026!"
+      Jwt__Issuer: "FCG02.UsersAPI"
+      Jwt__Audience: "FCG02.CloudGamesClients"
+      Jwt__ExpirationInSeconds: "7200"
+      RabbitMQ__HostName: "rabbitmq"
+      RabbitMQ__Port: "5672"
+      RabbitMQ__UserName: "guest"
+      RabbitMQ__Password: "guest"
+      RabbitMQ__Exchange: "fcg.users.events"
+    ports:
+      - "8080:8080"
+    networks:
+      - fcg-network
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # microsserviço NotificationsAPI
+  notifications-api:
+    build:
+      context: ../fcg-fase-02--notifications
+      dockerfile: Dockerfile
+    container_name: fcg-ms-notifications-api
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      RabbitMQ__HostName: "rabbitmq"
+      RabbitMQ__Port: "5672"
+      RabbitMQ__UserName: "guest"
+      RabbitMQ__Password: "guest"
+      RabbitMQ__Exchange: "fcg.users.events"
+      RabbitMQ__Queue: "notifications.user-created"
+      RabbitMQ__RoutingKey: "user.created"
+    ports:
+      - "8081:8080"
+    networks:
+      - fcg-network
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # microsserviço CatalogAPI
+  catalog-api:
+    build:
+      context: ../fcg-fase-02--catalog
+      dockerfile: Dockerfile
+    container_name: fcg-ms-catalog-api
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      ConnectionStrings__DefaultConnection: "Server=tcp:fcg-server.database.windows.net,1433;Initial Catalog=fcg-02-catalogdb;Persist Security Info=False;User ID=fcg-sa;Password=f1@p-cluod-gam3s;MultipleActiveResultSets=True;Encrypt=True;TrustServerCertificate=True;Connection Timeout=90;"
+      RabbitMQ__HostName: "rabbitmq"
+      RabbitMQ__Port: "5672"
+      RabbitMQ__UserName: "guest"
+      RabbitMQ__Password: "guest"
+      RabbitMQ__Exchange: "fcg.users.events"
+      RabbitMQ__PaymentsExchange: "fcg.payments.events"
+      RabbitMQ__PaymentProcessedQueue: "catalog.payment-processed"
+      RabbitMQ__PaymentProcessedRoutingKey: "payment.*"
+      Jwt__SecretKey: "ChaveSuperSecretaEForteComMaisDe32CaracteresFIAPCloudGames2026!"
+      Jwt__Issuer: "FCG02.UsersAPI"
+      Jwt__Audience: "FCG02.CloudGamesClients"
+    ports:
+      - "8082:8080"
+    networks:
+      - fcg-network
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # microsserviço paymentsAPI
+  payments-api:
+    build:
+      context: ../fcg-fase-02--payments
+      dockerfile: Dockerfile
+    container_name: fcg-ms-payments-api
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: "Server=tcp:fcg-server.database.windows.net,1433;Initial Catalog=fcg-02-paymentsdb;Persist Security Info=False;User ID=fcg-sa;Password=f1@p-cluod-gam3s;MultipleActiveResultSets=True;Encrypt=True;TrustServerCertificate=True;Connection Timeout=90;"
+      RabbitMQ__HostName: "rabbitmq"
+      RabbitMQ__Port: "5672"
+      RabbitMQ__UserName: "guest"
+      RabbitMQ__Password: "guest"
+      RabbitMQ__Exchange: "fcg.payments.events"
+      RabbitMQ__CatalogExchange: "fcg.catalog.events"
+      RabbitMQ__OrderPlacedQueue: "payments.order-placed"
+      RabbitMQ__OrderPlacedRoutingKey: "order.placed"
+    ports:
+      - "8083:8080"
+    networks:
+      - fcg-network
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    restart: unless-stopped
+
+networks:
+  fcg-network:
+    driver: bridge
+
+volumes:
+  rabbitmq_data:
+

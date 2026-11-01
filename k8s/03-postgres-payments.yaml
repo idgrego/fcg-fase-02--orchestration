@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-payments-deployment
+  labels:
+    app: postgres-payments
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres-payments
+  template:
+    metadata:
+      labels:
+        app: postgres-payments
+    spec:
+      containers:
+        - name: postgres-payments
+          image: postgres:17-alpine
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_USER
+              value: "postgres"
+            - name: POSTGRES_PASSWORD
+              value: "postgres"
+            - name: POSTGRES_DB
+              value: "paymentsdb"
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "300m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-payments
+  labels:
+    app: postgres-payments
+spec:
+  type: ClusterIP
+  selector:
+    app: postgres-payments
+  ports:
+    - port: 5432
+      targetPort: 5432
