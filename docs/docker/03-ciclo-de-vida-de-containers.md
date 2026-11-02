@@ -182,9 +182,11 @@ Todo texto impresso pela aplicação na saída padrão (`Console.WriteLine`, `IL
 docker logs users-api
 
 # Acompanha os logs em tempo real (modo streaming contínuo)
+# -f follow Mantém a transmissão dos logs em tempo real (modo contínuo)
 docker logs -f users-api
 
 # Exibe apenas as últimas 50 linhas com carimbo de data/hora (timestamps)
+# -t timestamps: Adiciona o carimbo de data e hora (timestamp) no início de cada linha de log, permitindo saber exatamente o segundo em que cada evento foi registrado dentro do container
 docker logs -f --tail 50 -t users-api
 ```
 

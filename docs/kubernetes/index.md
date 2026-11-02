@@ -42,8 +42,9 @@ graph TD
 
 ### 2. [02. Manifestos YAML e Tipos de Configuração (`02-manifestos-e-tipos-de-configuracao.md`)](02-manifestos-e-tipos-de-configuracao.md)
 - **O Modelo Declarativo:** Estrutura universal de manifestos K8s (`apiVersion`, `kind`, `metadata`, `spec`).
+- **Labels e Selectors:** Funcionamento da associação dinâmica, padrão recomendado oficial (`app.kubernetes.io/*`), filtros CLI do operador, observabilidade, diferenças para Annotations e anti-padrões.
 - **ConfigMap:** Armazenamento desacoplado de parâmetros públicos e mapeamento com duplo underscore (`__`) no ASP.NET Core.
-- **Secret:** Proteção de dados confidenciais com codificação estrita em **Base64** (`ConnectionStrings__DefaultConnection` apontando para o Azure Database, senhas de broker e chaves JWT).
+- **Secret e Tipos Nativos:** Proteção de dados confidenciais em Base64 vs `stringData`, catálogo completo de tipos nativos (`Opaque`, `service-account-token`, `dockerconfigjson`, `basic-auth`, `ssh-auth`, `tls`, `bootstrap.token`) e segurança corporativa (RBAC, KMS, External Secrets Operator).
 - **Deployment:** Especificação de réplicas, estratégia `RollingUpdate` sem downtime, injeção em lote via `envFrom`, governança de recursos (`requests`/`limits`) e sondas `/health`.
 - **Service:** Abstração de rede estável (`ClusterIP`, `NodePort`, `LoadBalancer`) e a relação entre `port` e `targetPort`.
 - **Rastreabilidade:** Diagrama Mermaid detalhando como os 4 manifestos se amarram mutuamente.

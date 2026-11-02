@@ -124,6 +124,45 @@ A forma mais simples e robusta de subir todo o ambiente de desenvolvimento é ut
 
 ---
 
+### 2.3. Execução e Deploy no Kubernetes Local (`kubectl`)
+
+Para implantar toda a solução no cluster Kubernetes (ex: Docker Desktop K8s, Minikube ou Kind):
+
+1. **Aplicar a infraestrutura de mensageria (RabbitMQ):**
+   ```powershell
+   kubectl apply -f k8s/01-rabbitmq.yaml
+   ```
+
+2. **Aplicar os manifestos de cada microsserviço (ConfigMaps, Secrets, Deployments e Services):**
+   ```powershell
+   # UsersAPI
+   kubectl apply -f ../fcg-fase-02--users/k8s/
+
+   # NotificationsAPI
+   kubectl apply -f ../fcg-fase-02--notifications/k8s/
+
+   # CatalogAPI
+   kubectl apply -f ../fcg-fase-02--catalog/k8s/
+
+   # PaymentsAPI
+   kubectl apply -f ../fcg-fase-02--payments/k8s/
+   ```
+
+3. **Verificar se todos os Pods e Serviços estão saudáveis e em execução:**
+   ```powershell
+   kubectl get pods -l 'app in (users-api, notifications-api, catalog-api, payments-api, rabbitmq)'
+   kubectl get services
+   ```
+
+4. **Acessar os microsserviços via port-forward:**
+   ```powershell
+   kubectl port-forward svc/users-api-service 8080:80
+   kubectl port-forward svc/catalog-api-service 8082:80
+   kubectl port-forward svc/payments-api-service 8083:80
+   ```
+
+---
+
 ## 3. Visão Global da Solução & Fluxo Distribuído
 
 Para entender como todos os microsserviços interagem de forma síncrona (HTTP REST) e assíncrona (Event-Driven com RabbitMQ), consulte a documentação técnica completa:
