@@ -89,7 +89,7 @@ services:
       RabbitMQ__Port: "5672"
       RabbitMQ__UserName: "guest"
       RabbitMQ__Password: "guest"
-      RabbitMQ__Exchange: "fcg.users.events"
+      RabbitMQ__Exchange: "fcg.catalog.events"
       RabbitMQ__PaymentsExchange: "fcg.payments.events"
       RabbitMQ__PaymentProcessedQueue: "catalog.payment-processed"
       RabbitMQ__PaymentProcessedRoutingKey: "payment.*"
